@@ -8,7 +8,6 @@ else
 	CPPFLAGS=-Dhidapi
 	LIBS=-lhidapi-hidraw
 endif
-SYSTEMDDIR?=/usr/lib/systemd
 
 PREFIX?=$(DESTDIR)/usr
 libdir?=$(PREFIX)/lib
@@ -69,9 +68,6 @@ setup:
 	@test -s $(DESTDIR)/usr/bin/gpro-led || ln -s /usr/bin/$(PROGN) $(DESTDIR)/usr/bin/gpro-led
 	@cp sample_profiles/* $(DESTDIR)/etc/$(PROGN)/samples
 	@cp udev/$(PROGN).rules $(DESTDIR)/etc/udev/rules.d
-	@test -s /usr/bin/systemd-run && \
-		install -m 755 -d $(DESTDIR)$(SYSTEMDDIR)/system && \
-		cp systemd/$(PROGN)-reboot.service $(DESTDIR)$(SYSTEMDDIR)/system
 
 install-lib: lib
 	@install -m 755 -d $(libdir)
@@ -89,9 +85,6 @@ install: setup
 		cp /etc/$(PROGN)/samples/all_off /etc/$(PROGN)/reboot
 	@udevadm control --reload-rules
 	@$(PROGN) -p /etc/$(PROGN)/profile
-	@test -s /usr/bin/systemd-run && \
-		systemctl daemon-reload && \
-		systemctl enable $(PROGN)-reboot
 
 uninstall-lib:
 	@rm -f $(libdir)/lib$(PROGN).so*
@@ -100,12 +93,6 @@ uninstall-dev:
 	@rm -rf $(includedir)/$(PROGN)
 
 uninstall:
-	@test -s /usr/bin/systemd-run && \
-		systemctl disable $(PROGN)-reboot && \
-		rm $(SYSTEMDDIR)/system/$(PROGN)-reboot.service && \
-		systemctl daemon-reload && \
-		rm -R /etc/$(PROGN)
-	
 	@rm /usr/bin/g213-led
 	@rm /usr/bin/g410-led
 	@rm /usr/bin/g413-led
